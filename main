@@ -1,0 +1,80 @@
+# -*- coding: utf-8 -*-
+"""
+Spyder Editor
+
+This is a temporary script file.
+"""
+import numpy as np
+import pandas as pd
+
+import matplotlib.pyplot as plt
+
+
+import functools
+import time
+
+
+import lib.toolbox as tb
+import lib.losses as loss
+
+start_time = time.time()
+file_path = 'features.csv'
+df = pd.read_csv(file_path)
+df = df.dropna()
+df = df.reset_index(drop = True)
+df_original = df.copy()
+df = df.iloc[:,1:]
+columns = df.columns
+
+
+#score_func = loss.cosine_similarity
+score_func = loss.l2_distance
+#score_func = loss.inner
+#score_func = functools.partial(loss.gaussian_kernel, sigma = 1)
+
+normalizer = tb.normalizer_minmax
+#normalizer = tb.normalizer_mean
+
+customer_desire_index = 0
+
+care = []
+include_care = False
+multiplier_dict = {}
+
+
+requirements = [7, 8, 9]
+include_requirement = True
+
+
+
+normalizd_df = normalizer(df)
+first_row = normalizd_df.iloc[customer_desire_index]
+
+mask = tb.mask_generator(care, len(columns), include = include_care)
+weights = tb.weight_multiplier(mask, multiplier_dict)
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(elapsed_time)
+
+#inner_products = normalizd_df.apply(lambda row: score_func(first_row.mul(weights), row.mul(weights)), axis=1)
+inner_products = normalizd_df.apply(lambda row: score_func(first_row, row, weights), axis=1)
+
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(elapsed_time)
+
+sorted_inner_products = inner_products.sort_values(ascending = False)
+sorted_inner_products = sorted_inner_products.reset_index()
+sorted_inner_products.columns = ['Index', 'Inner Product']
+
+
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(elapsed_time)
+
+
+rows_to_print = [sorted_inner_products.iloc[-1,0]] + [customer_desire_index]+sorted_inner_products.iloc[:5,0].to_list()
+selected_rows = pd.concat([df_original.iloc[row] for row in rows_to_print], axis=1)
