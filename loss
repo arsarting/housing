@@ -1,0 +1,26 @@
+# -*- coding: utf-8 -*-
+
+import numpy as np
+
+def inner(first, others, weights):
+    return np.dot(first, others.T*weights)
+
+def cosine_similarity(first, others, weights):
+    return np.dot(first, others)/(np.linalg.norm(first)*np.linalg.norm(others))
+
+
+
+def l2_distance(first, others, weights, eps = 1e-8):
+    squared_diff = (first - others) ** 2
+    weighted_squared_diff = squared_diff * weights
+    result = 1 /(np.sqrt(np.sum(weighted_squared_diff)) + eps)
+    
+    return result
+
+def gaussian_kernel(first, others, weights, sigma):
+    sqre_diff = (first - others) ** 2
+    weighted_sqre_diff = sqre_diff * weights
+    weighted_dist = np.sqrt(np.sum(weighted_sqre_diff))
+    result = np.exp(-weighted_dist / (2 * (sigma ** 2)))
+    
+    return result
